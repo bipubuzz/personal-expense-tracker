@@ -4,10 +4,12 @@
     <meta charset="UTF-8" />
     <title>Personal Expense Tracker</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="/static/styles.css" />
+
+    <link rel="stylesheet" href="/static/style.css" />
   </head>
   <body>
-    {% block nav_bar %} {% include 'nav-bar.html' %} {% endblock %} {% block
-    content %}{% endblock %}
+    {% include 'nav-bar.html' %} {% include 'addexpense.html' %}
+    <main id="main-content">{% block dashboard %}{% endblock %}</main>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
   </body>
 </html>
