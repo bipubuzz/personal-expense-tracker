@@ -1,0 +1,38 @@
+<div id="popup" class="popup">
+  <h2>Add New Expense</h2>
+  <form id="add-expense-form">
+    <div>
+      <div>
+        <label for="Amount">Amount ($)</label>
+        <input type="number" id="amount" placeholder="0.00" />
+      </div>
+      <div>
+        <label for="Category">Category</label>
+        <select id="category">
+          <option value="Food">Food</option>
+          <option value="Shopping">Shopping</option>
+          <option value="Transport">Transport</option>
+          <option value="Utilities">Utilities</option>
+          <option value="Entertainment">Entertainment</option>
+          <option value="Education">Education</option>
+          <option value="Healthcare">Healthcare</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+    </div>
+    <div>
+      <label for="Description">Description</label>
+      <input
+        type="text"
+        id="description"
+        required
+        placeholder="What did you spend on?" />
+    </div>
+    <div>
+      <label for="Date">Date</label>
+      <input type="date" id="date" placeholder="" />
+    </div>
+    <button type="submit">Add Expense</button>
+  </form>
+  <button type="button" id="exit-btn">X</button>
+</div>

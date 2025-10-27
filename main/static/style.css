@@ -1,0 +1,87 @@
+@import url("https://fonts.googleapis.com/css2?family=Macondo&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
+/*NAVIGATION-SIDE-BAR*/
+
+#sidebar {
+  box-sizing: border-box;
+  width: 70px; /* collapsed width */
+  height: 100vh;
+  padding: 0;
+  background-color: var(--base-clr);
+  border-right: 1px solid black;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: width 0.3s;
+  overflow: hidden;
+  z-index: 1000;
+  position: fixed;
+}
+#sidebar:hover {
+  width: 260px; /* expanded width */
+}
+#sidebar ul li a,
+.logo,
+.add-expense-btn,
+.profile-section {
+  white-space: nowrap;
+  overflow: hidden;
+  transition: padding 0.3s, opacity 0.3s;
+}
+#sidebar ul,
+.profile-section {
+  margin: 0;
+  padding: 20px;
+  list-style: none;
+}
+#sidebar ul li {
+  padding-bottom: 30px;
+}
+#sidebar ul li a {
+  text-decoration: none;
+}
+#sidebar ul li.active a {
+  color: var(--accent-clr);
+  svg {
+    fill: var(--accent-clr);
+  }
+}
+#sidebar:not(:hover) ul li a span,
+#sidebar:not(:hover) .logo span,
+#sidebar:not(:hover) .add-expense-btn span,
+#sidebar:not(:hover) .profile-details {
+  opacity: 0;
+  width: 0;
+  padding: 0;
+  transition: opacity 0.3s, width 0.3s, padding 0.3s;
+}
+
+#sidebar:hover ul li a span,
+#sidebar:hover .logo span,
+#sidebar:hover .add-expense-btn span,
+#sidebar:hover .profile-details {
+  opacity: 1;
+  width: auto;
+  padding-left: 1em;
+  transition: opacity 0.3s, width 0.3s, padding 0.3s;
+}
+/*MAIN CONTENT*/
+#main-content {
+  margin-left: 50px;
+  padding: 2em;
+  transition: margin-left 0.3s;
+}
+/*NAV_BAR_POPUP*/
+.popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  padding: 20px;
+  border: 1px solid black;
+  display: none;
+}
+
+.popup.show {
+  display: block;
+}
