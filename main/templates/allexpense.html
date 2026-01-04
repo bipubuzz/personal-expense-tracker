@@ -1,0 +1,111 @@
+{% extends "layout.html" %} 
+{% block content %}
+
+<!-- Main container for all expenses -->
+<div class="expenses-container">
+  
+  <!-- Filter and Search Section -->
+  <form method="POST" action="{{ url_for('allexpense') }}" class="filters-section">
+    
+    <!-- Search Bar: Search expenses by description or category -->
+    <div class="search-bar">
+      <input type="text" name="search" id="search-input" placeholder="Search expenses..." value="{{ search_term }}" />
+    </div>
+    
+    <!-- Filter Controls: Category dropdown -->
+    <div class="filter-controls">
+      
+      <!-- Category Filter Dropdown -->
+      <div class="filter-dropdown">
+        <select name="category" id="category-select" class="filter-btn" onchange="this.form.submit()">
+          <option value="all" {% if selected_category == 'all' or not selected_category %}selected{% endif %}>All Categories</option>
+          <option value="Food" {% if selected_category == 'Food' %}selected{% endif %}>Food</option>
+          <option value="Transport" {% if selected_category == 'Transport' %}selected{% endif %}>Transport</option>
+          <option value="Shopping" {% if selected_category == 'Shopping' %}selected{% endif %}>Shopping</option>
+          <option value="Utilities" {% if selected_category == 'Utilities' %}selected{% endif %}>Utilities</option>
+          <option value="Entertainment" {% if selected_category == 'Entertainment' %}selected{% endif %}>Entertainment</option>
+          <option value="Education" {% if selected_category == 'Education' %}selected{% endif %}>Education</option>
+          <option value="Healthcare" {% if selected_category == 'Healthcare' %}selected{% endif %}>Healthcare</option>
+          <option value="Other" {% if selected_category == 'Other' %}selected{% endif %}>Other</option>
+        </select>
+      </div>
+      
+      <!-- Advanced Filters Toggle Button -->
+      <button type="button" class="filter-btn advanced-btn" id="advanced-filters-btn" onclick="toggleAdvancedFilters()">
+        <span>Advanced Filters</span>
+      </button>
+      
+      <!-- Submit Button -->
+      <button type="submit" class="filter-btn" style="background-color: #3b82f6; color: white;">
+        <span>Apply Filters</span>
+      </button>
+      
+      <!-- Clear Filters Button -->
+      <a href="{{ url_for('allexpense') }}" class="filter-btn" style="background-color: #6b7280; color: white; text-decoration: none; display: inline-block;">
+        <span>Clear Filters</span>
+      </a>
+    </div>
+    
+    <!-- Advanced Filters Section (hidden by default) -->
+    <div class="advanced-filters" id="advanced-filters" style="display: none;">
+      <div class="filter-group">
+        <label>Amount Range</label>
+        <div class="range-inputs">
+          <input type="number" name="min-amount" id="min-amount" placeholder="Min" value="{{ min_amount }}" step="0.01" />
+          <input type="number" name="max-amount" id="max-amount" placeholder="Max" value="{{ max_amount }}" step="0.01" />
+        </div>
+      </div>
+      <div class="filter-group">
+        <label>Date Range</label>
+        <div class="range-inputs">
+          <input type="date" name="start-date" id="start-date" value="{{ start_date }}" />
+          <input type="date" name="end-date" id="end-date" value="{{ end_date }}" />
+        </div>
+      </div>
+    </div>
+  </form>
+  
+  <!-- Expenses Header: Shows total count -->
+  <h1 class="expenses-header">Expenses ({{ expenses|length }})</h1>
+  
+  <!-- Display expenses if they exist -->
+  {% if expenses %}
+  <div class="expenses-list">
+    {% for expense in expenses %}
+    <div class="expense-card">
+      <div class="expense-content">
+        <div class="expense-main">
+          <h3 class="expense-description">{{ expense.description }}</h3>
+          <span class="expense-category category-{{ expense.category }}">{{ expense.category }}</span>
+        </div>
+        <span class="expense-date">{{ expense.date.strftime('%b %d, %Y') }}</span>
+      </div>
+      <div class="expense-actions">
+        <span class="expense-amount">${{ "%.2f"|format(expense.amount) }}</span>
+        <a href="#" class="edit-btn" 
+           data-id="{{ expense.id }}"
+           data-amount="{{ '%.2f'|format(expense.amount) }}"
+           data-category="{{ expense.category }}"
+           data-description="{{ expense.description|e }}"
+           data-date="{{ expense.date.strftime('%Y-%m-%d') }}"
+           title="Edit">
+          <span>✏️</span>
+        </a>
+        <a href="{{ url_for('delete_expense', expense_id=expense.id) }}" class="delete-btn" onclick="return confirm('Are you sure you want to delete this expense?');" style="margin-left:8px;">
+          <span>🗑️</span>
+        </a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <!-- Show message if no expenses found -->
+  <div class="no-expenses">
+    <p>No expenses found. Start by adding your first expense!</p>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+

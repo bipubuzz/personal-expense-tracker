@@ -1,6 +1,149 @@
-{% extends "layout.html" %} {% block dashboard %}
-<div class="dashboard-content">
-  <h1>Welcome to Your Personal Expense Tracker</h1>
-  <p>Here you can view your expenses, reports, and compare your spending.</p>
+{% extends "layout.html" %} {% block content %}
+
+<div
+  class="dashboard-grid"
+  style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px">
+  <div
+    class="summary-card"
+    style="background: #fff; border-radius: 12px; padding: 18px">
+    <small>Today's Spending</small>
+    <h2 style="margin: 8px 0">${{ '%.2f'|format(today_total) }}</h2>
+    <small style="color: #6b7280">0 transactions today</small>
+  </div>
+
+  <div
+    class="summary-card"
+    style="background: #fff; border-radius: 12px; padding: 18px">
+    <small>This Month</small>
+    <h2 style="margin: 8px 0">${{ '%.2f'|format(month_total) }}</h2>
+    <small style="color: #6b7280">Monthly spending</small>
+  </div>
+
+  <div
+    class="summary-card"
+    style="background: #fff; border-radius: 12px; padding: 18px">
+    <small>Total Expenses</small>
+    <h2 style="margin: 8px 0">${{ '%.2f'|format(total_amount) }}</h2>
+    <small style="color: #6b7280">{{ expense_count }} total transactions</small>
+  </div>
 </div>
+
+<div style="height: 24px"></div>
+
+<div
+  class="main-dashboard"
+  style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px">
+  <div style="background: #fff; border-radius: 12px; padding: 20px">
+    <h3 style="margin-top: 0">Category Breakdown</h3>
+    <div
+      style="
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 18px;
+      ">
+      <canvas
+        id="dashboardDonut"
+        style="max-width: 420px; height: 260px"></canvas>
+    </div>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 20px">
+    <div style="background: #fff; border-radius: 12px; padding: 18px">
+      <h4 style="margin: 0 0 12px 0">Top Spending Categories</h4>
+      <ul style="list-style: none; padding: 0; margin: 0">
+        {% for cat, amt in top_categories %}
+        <li
+          style="
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f3f4f6;
+          ">
+          <div style="display: flex; gap: 8px; align-items: center">
+            <span
+              style="
+                background: #f3f4f6;
+                border-radius: 6px;
+                padding: 6px 8px;
+                color: #6b7280;
+                font-weight: 600;
+              "
+              >#{{ loop.index }}</span
+            >
+            <div>{{ cat }}</div>
+          </div>
+          <div>${{ '%.2f'|format(amt) }}</div>
+        </li>
+        {% else %}
+        <li style="color: #6b7280">No categories yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <div style="background: #fff; border-radius: 12px; padding: 18px">
+      <h4 style="margin: 0 0 12px 0">Recent Expenses</h4>
+      <div style="display: flex; flex-direction: column; gap: 10px">
+        {% for e in recent_expenses %}
+        <div
+          style="
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          ">
+          <div>
+            <div style="font-weight: 600">{{ e.description }}</div>
+            <div
+              style="
+                font-size: 12px;
+                color: #6b7280;
+                display: flex;
+                gap: 8px;
+                align-items: center;
+              ">
+              <span>{{ e.date }}</span
+              ><span
+                style="
+                  background: #fff2cc;
+                  padding: 2px 8px;
+                  border-radius: 12px;
+                  font-size: 12px;
+                  color: #b45309;
+                "
+                >{{ e.category }}</span
+              >
+            </div>
+          </div>
+          <div style="font-weight: 700">
+            ${{ '%.2f'|format(e.amount or 0) }}
+          </div>
+        </div>
+        {% else %}
+        <div style="color: #6b7280">No recent expenses.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Include Chart.js -->
+<script src="{{ url_for('static', filename='js/chart.js') }}"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function(){
+    var labels = {{ donut_labels|default([])|tojson|safe }};
+    var amounts = {{ donut_amounts|default([])|tojson|safe }};
+
+    if (typeof Chart !== 'undefined' && labels.length && amounts.length) {
+      new Chart(document.getElementById('dashboardDonut').getContext('2d'), {
+        type: 'doughnut',
+        data: { labels: labels, datasets: [{ data: amounts, backgroundColor: ['#ef4444','#3b82f6','#8b5cf6','#f97316','#10b981','#06b6d4','#ec4899','#6b7280'] }] },
+        options: { responsive:true, maintainAspectRatio:false, cutout:'45%', plugins:{legend:{position:'right'}} }
+      });
+    }
+  });
+</script>
+
 {% endblock %}

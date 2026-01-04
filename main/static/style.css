@@ -1,13 +1,46 @@
 @import url("https://fonts.googleapis.com/css2?family=Macondo&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
-/*NAVIGATION-SIDE-BAR*/
+
+/* ============================================
+   GLOBAL STYLES
+   ============================================ */
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+#add-expense-overlay {
+  min-height: 100vh;
+}
+
+/* ============================================
+   CSS VARIABLES (COLORS)
+   ============================================ */
+
+:root {
+  --base-clr: #eff2ff;
+  --accent-clr: #b7b8ff;
+}
+
+/* ============================================
+   NAVIGATION SIDEBAR
+   ============================================ */
 
 #sidebar {
+  font-weight: 400;
   box-sizing: border-box;
-  width: 70px; /* collapsed width */
-  height: 100vh;
+  width: 85px; /* collapsed width */
+  height: 102vh;
   padding: 0;
   background-color: var(--base-clr);
-  border-right: 1px solid black;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -15,10 +48,14 @@
   overflow: hidden;
   z-index: 1000;
   position: fixed;
+  margin-top: -10px;
+  margin-left: -10px;
 }
+
 #sidebar:hover {
   width: 260px; /* expanded width */
 }
+
 #sidebar ul li a,
 .logo,
 .add-expense-btn,
@@ -27,24 +64,58 @@
   overflow: hidden;
   transition: padding 0.3s, opacity 0.3s;
 }
+
 #sidebar ul,
 .profile-section {
   margin: 0;
   padding: 20px;
   list-style: none;
 }
+
+.profile-section {
+  padding-left: 30px;
+}
+
+.profile-section svg {
+  width: 30px;
+  height: 30px;
+}
+
 #sidebar ul li {
-  padding-bottom: 30px;
+  border-radius: 9px;
+  margin-bottom: 20px;
 }
-#sidebar ul li a {
-  text-decoration: none;
-}
-#sidebar ul li.active a {
-  color: var(--accent-clr);
+
+.sidebar-item.active {
+  background-color: var(--accent-clr);
+  color: black;
   svg {
-    fill: var(--accent-clr);
+    fill: black;
   }
 }
+
+#sidebar ul li a {
+  color: black;
+  display: block;
+  padding: 10px;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+#sidebar ul li a span,
+#sidebar ul li a svg {
+  vertical-align: middle;
+}
+
+#add-expense-btn {
+  background-color: var(--accent-clr);
+  color: black;
+  svg {
+    fill: black;
+  }
+}
+
+/* Hide text when sidebar is collapsed */
 #sidebar:not(:hover) ul li a span,
 #sidebar:not(:hover) .logo span,
 #sidebar:not(:hover) .add-expense-btn span,
@@ -55,6 +126,7 @@
   transition: opacity 0.3s, width 0.3s, padding 0.3s;
 }
 
+/* Show text when sidebar is expanded */
 #sidebar:hover ul li a span,
 #sidebar:hover .logo span,
 #sidebar:hover .add-expense-btn span,
@@ -64,24 +136,780 @@
   padding-left: 1em;
   transition: opacity 0.3s, width 0.3s, padding 0.3s;
 }
-/*MAIN CONTENT*/
+
+/* ============================================
+   MAIN CONTENT AREA
+   ============================================ */
+
 #main-content {
   margin-left: 50px;
   padding: 2em;
   transition: margin-left 0.3s;
 }
-/*NAV_BAR_POPUP*/
-.popup {
+
+/* Override main-content styles for login/register pages */
+body:has(.login-center) #main-content,
+#main-content:has(.login-center) {
+  margin-left: 0 !important;
+  padding: 0 !important;
+  position: relative;
+}
+
+body:has(.login-center) #add-expense-overlay,
+#add-expense-overlay:has(.login-center) {
+  margin: 0 !important;
+  padding: 0 !important;
+  position: relative;
+  min-height: 100vh;
+  overflow-y: auto;
+}
+
+body:has(.login-center) {
+  overflow-y: auto;
+  height: auto;
+}
+
+/* ============================================
+   ADD EXPENSE POPUP
+   ============================================ */
+
+/* Backdrop overlay for popup */
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 999;
+  display: none;
+}
+
+.popup-overlay.show {
+  display: block;
+}
+
+#popup {
+  width: 500px;
+  height: 400px;
   position: fixed;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: white;
   padding: 20px;
-  border: 1px solid black;
+  border-radius: 15px;
   display: none;
+  z-index: 1000;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
-.popup.show {
+#popup.show {
   display: block;
+}
+
+/* Blur main content when popup is shown */
+body:has(#popup.show) #main-content,
+#add-expense-overlay:has(#popup.show) #main-content {
+  filter: blur(4px);
+  pointer-events: none;
+  transition: filter 0.3s ease;
+}
+
+/* Keep sidebar visible and unblurred */
+body:has(#popup.show) #sidebar {
+  filter: none;
+  pointer-events: auto;
+}
+
+/* ============================================
+   ADD EXPENSE FORM
+   ============================================ */
+
+#add-expense-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 35px;
+}
+
+#amount-category-container {
+  display: flex;
+}
+
+#amount-category-container div {
+  margin-right: 2.4rem;
+}
+
+#amount-category-container div,
+.other-container {
+  display: flex;
+  flex-direction: column;
+}
+
+#amount-category-container div select {
+  overflow: visible;
+  width: 12rem;
+}
+
+#add-expense-header h2 {
+  margin: 0;
+}
+
+#add-expense-form {
+  padding-left: 50px;
+  padding-right: 50px;
+  flex-direction: column;
+  display: flex;
+}
+
+.add-expense-input-box,
+#add-expense-submit-btn {
+  padding-left: 9px;
+  margin-bottom: 15px;
+  width: auto;
+  height: 40px;
+  border-radius: 8px;
+  border: none;
+  background-color: rgb(247, 247, 247);
+}
+
+#add-expense-submit-btn {
+  background-color: var(--accent-clr);
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+#add-expense-exit-btn {
+  background-color: transparent;
+  border: none;
+  font-size: 1.8rem;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  vertical-align: top;
+}
+
+/* ============================================
+   REGISTER AND LOGIN PAGES
+   ============================================ */
+
+.login-center {
+  background: linear-gradient(135deg, #e8e5ff 0%, #d4d0f7 100%);
+  display: flex;
+  justify-content: center;
+  align-items: center; /* center vertically to avoid scroll */
+  min-height: 100vh;
+  width: 100%;
+  margin: 0;
+  padding: 18px; /* slightly reduce padding */
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden; /* prevent extra scroll when centered */
+}
+
+.container {
+  width: 100%;
+  max-width: 560px; /* fixed max width so layout is compact */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto; /* center horizontally */
+}
+
+.header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.logo-icon {
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: white;
+}
+
+/* Smaller header sizing for login/register pages so they fit on one screen */
+.login-center .logo-icon {
+  width: 56px;
+  height: 56px;
+  font-size: 24px;
+}
+.login-center .app-title {
+  font-size: 22px;
+  margin-top: 8px;
+}
+.login-center .app-subtitle {
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.login-center .welcome-title {
+  font-size: 20px;
+}
+
+.app-title {
+  font-size: 28px;
+  margin: 0px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.app-subtitle {
+  font-size: 16px;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.login-content {
+  width: 100%;
+}
+
+.login-card {
+  background: white;
+  border-radius: 24px;
+  padding: 32px 28px; /* reduce vertical padding to fit on one screen */
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.card-header {
+  text-align: center;
+  margin-bottom: 2px;
+}
+
+.welcome-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 8px;
+  margin-top: 2px;
+}
+
+.welcome-subtitle {
+  font-size: 16px;
+  color: #6b7280;
+  font-weight: 400;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 16px;
+  color: #9ca3af;
+}
+
+.form-input {
+  width: 100%;
+  padding: 16px 16px 16px 48px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 16px;
+  color: #111827;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+.form-input::placeholder {
+  color: #9ca3af;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.eye-icon {
+  color: #6b7280;
+}
+
+.forgot-password {
+  text-align: right;
+  margin-top: -8px;
+}
+
+.forgot-link {
+  font-size: 14px;
+  color: #8b5cf6;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.forgot-link:hover {
+  color: #7c3aed;
+}
+
+.sign-in-btn {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(#8b5cf6 0%, #7c3aed 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.3);
+}
+
+.sign-in-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4);
+}
+
+.sign-in-btn:active {
+  transform: translateY(0);
+}
+
+.signup-prompt {
+  text-align: center;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.signup-link {
+  color: #8b5cf6;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.signup-link:hover {
+  color: #7c3aed;
+}
+
+.footer {
+  text-align: center;
+  margin-top: 12px;
+}
+
+.footer p {
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+/* ============================================
+   EXPENSES PAGE
+   ============================================ */
+
+.expenses-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.filters-section {
+  margin-bottom: 2rem;
+}
+
+/* Search Bar */
+.search-bar {
+  position: relative;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  pointer-events: none;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 3rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.search-bar input:focus {
+  outline: none;
+  border-color: #8b5cf6;
+}
+
+/* Filter Controls */
+.filter-controls {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.filter-dropdown {
+  position: relative;
+}
+
+.filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-btn:hover {
+  border-color: #8b5cf6;
+}
+
+.filter-btn svg {
+  transition: transform 0.2s;
+}
+
+.filter-dropdown.active .filter-btn svg {
+  transform: rotate(180deg);
+}
+
+/* Dropdown Menu */
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  min-width: 200px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  display: none;
+  z-index: 100;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.filter-dropdown.active .dropdown-menu {
+  display: block;
+}
+
+.dropdown-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+  background: #f3f4f6;
+}
+
+.dropdown-item.selected {
+  background: #f3f4f6;
+  color: #8b5cf6;
+}
+
+.dropdown-item.selected::after {
+  content: "✓";
+  color: #8b5cf6;
+  font-weight: bold;
+}
+
+/* Advanced Filters */
+.advanced-btn {
+  background: #f9fafb;
+}
+
+.advanced-filters {
+  display: none;
+  padding: 1.5rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  margin-top: 1rem;
+  gap: 1.5rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.advanced-filters.active {
+  display: grid;
+}
+
+.filter-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.range-inputs {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.range-inputs input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.range-inputs input:focus {
+  outline: none;
+  border-color: #8b5cf6;
+}
+
+/* Expenses Header */
+.expenses-header {
+  font-size: 24px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 2rem;
+}
+
+/* Expenses List */
+.expenses-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.expense-card {
+  background: #f3f4f6;
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s;
+}
+
+.expense-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.expense-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.expense-main {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.expense-description {
+  font-size: 16px;
+  font-weight: 500;
+  color: #111827;
+  margin: 0;
+}
+
+.expense-category {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+}
+
+/* Category Colors */
+.category-Food {
+  background: #f97316;
+}
+
+.category-Transport {
+  background: #3b82f6;
+}
+
+.category-Shopping {
+  background: #8b5cf6;
+}
+
+.category-Utilities {
+  background: #ef4444;
+}
+
+.category-Entertainment {
+  background: #ec4899;
+}
+
+.category-Education {
+  background: #10b981;
+}
+
+.category-Healthcare {
+  background: #06b6d4;
+}
+
+.category-Other {
+  background: #6b7280;
+}
+
+.expense-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.expense-date {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.expense-amount {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  min-width: 80px;
+  text-align: right;
+}
+
+.delete-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 6px;
+  transition: background 0.2s;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.delete-btn:hover {
+  background: rgba(220, 38, 38, 0.1);
+}
+
+.no-expenses {
+  text-align: center;
+  padding: 3rem;
+  color: #6b7280;
+}
+
+/* ============================================
+   REPORTS PAGE
+   ============================================ */
+
+.reports-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.reports-container h1 {
+  font-size: 32px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 2rem;
+}
+
+.reports-container h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1.5rem;
+}
+
+/* Summary Cards */
+.reports-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.summary-card {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.2s;
+}
+
+.summary-card:hover {
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.summary-card h3 {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  margin: 0 0 0.5rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.summary-value {
+  font-size: 28px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+}
+
+/* Chart Container */
+.chart-container {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+#pie-chart {
+  width: 100%;
+  height: 500px;
 }
