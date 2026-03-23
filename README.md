@@ -2,7 +2,6 @@
 
 A web-based expense tracking application built with Flask that helps users manage their personal finances, track spending habits, and visualize expense analytics.
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
 ![Flask](https://img.shields.io/badge/flask-3.0.0-green.svg)
 
@@ -141,7 +140,7 @@ personal-expense-tracker/
 ### Viewing Reports
 1. Navigate to "Reports" from the menu
 2. View category breakdown, timeline, and monthly charts
-3. Use filters to analyze specific time periods
+
 
 ### Comparing Months
 1. Go to "Compare" page
@@ -151,7 +150,7 @@ personal-expense-tracker/
 ### Admin Panel
 1. Navigate to `/admin/login`
 2. Log in with admin credentials
-3. View all users and their activity status
+3. View all users 
 4. Manage users (view/delete)
 
 ## Database Schema
@@ -183,7 +182,7 @@ personal-expense-tracker/
 - Session-based authentication
 - SQL injection prevention via SQLAlchemy ORM
 - User ownership validation for expense operations
-- Admin authentication separate from user accounts
+
 
 ## Contributing
 
@@ -193,15 +192,11 @@ personal-expense-tracker/
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## License
-
-This project is licensed under the MIT License.
-
 ## Acknowledgments
 
 - Flask framework and community
 - Chart.js for data visualization
-- Bootstrap for UI components
+- Werkzeug for password hashing
 
 ## Support
 
