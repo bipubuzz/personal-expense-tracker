@@ -121,7 +121,12 @@ document.addEventListener("click", function (e) {
   if (amountField) amountField.value = amount || "";
   if (categoryField) categoryField.value = category || "";
   if (descriptionField) descriptionField.value = description || "";
-  if (dateField) dateField.value = date || "";
+  if (dateField) {
+    dateField.value = date || "";
+    // Set max date to today to prevent future dates
+    const today = new Date().toISOString().split('T')[0];
+    dateField.setAttribute('max', today);
+  }
 
   // Switch form to update mode
   const form = document.getElementById("add-expense-form");
@@ -180,11 +185,15 @@ function toggleAdvancedFilters() {
  * Sets initial states and configurations
  */
 document.addEventListener("DOMContentLoaded", function () {
-  // Hide advanced filters by default
   const advancedFilters = document.getElementById("advanced-filters");
   if (advancedFilters) {
     advancedFilters.style.display = "none";
   }
 
-  console.log("Expense Tracker: JavaScript initialized successfully");
+  // Set max date for expense date input (prevent future dates)
+  const dateInput = document.getElementById("date");
+  if (dateInput) {
+    const today = new Date().toISOString().split('T')[0];
+    dateInput.setAttribute('max', today);
+  }
 });

@@ -1,0 +1,348 @@
+{% extends "layout.html" %} {% block content %}
+
+<!-- Reports Page Container -->
+<div class="reports-container">
+  <h1>Expense Reports</h1>
+
+  <!-- Summary Statistics -->
+  <div class="reports-summary">
+    <div class="summary-card">
+      <h3>Total Expenses</h3>
+      <p class="summary-value">NPR {{ "%.2f"|format(total_amount) }}</p>
+    </div>
+    <div class="summary-card">
+      <h3>Total Transactions</h3>
+      <p class="summary-value">{{ expense_count }}</p>
+    </div>
+    <div class="summary-card">
+      <h3>Categories</h3>
+      <p class="summary-value">{{ categories|length }}</p>
+    </div>
+  </div>
+
+  <!-- Charts Grid -->
+  <div class="chart-grid" style="
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      gap: 24px;
+    ">
+    <!-- Doughnut Chart -->
+    <div class="chart-container" style="
+        min-height: 360px;
+        background: #fff;
+        border-radius: 12px;
+        padding: 16px;
+      ">
+      <h2>Expenses by Category</h2>
+      <div style="position: relative; height: 300px">
+        <canvas id="expensesDonut" aria-label="Expense Distribution by Category"></canvas>
+        <div id="donut-empty" style="
+            display: none;
+            color: #6b7280;
+            text-align: center;
+            padding: 2rem;
+          ">
+          No expenses found for categories.
+        </div>
+      </div>
+    </div>
+
+    <!-- Bar Chart -->
+    <div class="chart-container" style="
+        min-height: 360px;
+        background: #fff;
+        border-radius: 12px;
+        padding: 16px;
+      ">
+      <h2>Monthly Totals</h2>
+      <div style="position: relative; height: 300px">
+        <canvas id="expensesBar" aria-label="Expense Totals by Category"></canvas>
+        <div id="bar-empty" style="
+            display: none;
+            color: #6b7280;
+            text-align: center;
+            padding: 2rem;
+          ">
+          No monthly data to display.
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline Chart -->
+    <div class="chart-container" style="
+        min-height: 360px;
+        background: #fff;
+        border-radius: 12px;
+        padding: 16px;
+        grid-column: 1 / -1;
+      ">
+      <h2>Expenses Over Time</h2>
+      <div style="position: relative; height: 320px">
+        <canvas id="expensesLine" aria-label="Expenses Over Time"></canvas>
+        <div id="line-empty" style="
+            display: none;
+            color: #6b7280;
+            text-align: center;
+            padding: 2rem;
+          ">
+          No timeline data to display.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Include Chart.js from local -->
+<script src="{{url_for('static', filename='js/chart.js')}}"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Plugin to draw value labels directly on chart elements (bars/slices/points)
+    const showDataLabelsPlugin = {
+      id: 'showDataLabels',
+      afterDatasetsDraw: (chart) => {
+        const ctx = chart.ctx;
+        chart.data.datasets.forEach((dataset, datasetIndex) => {
+          const meta = chart.getDatasetMeta(datasetIndex);
+          meta.data.forEach((element, index) => {
+            const value = dataset.data[index];
+            if (value === null || value === undefined) return;
+
+            const label = 'NPR ' + Number(value).toFixed(2);
+            ctx.save();
+            ctx.fillStyle = '#111827';
+            ctx.font = 'bold 12px system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+            ctx.textBaseline = 'middle';
+
+            let position = { x: element.x, y: element.y };
+            ctx.textAlign = 'center';
+
+            if (meta.type === 'bar') {
+              position = { x: element.x, y: element.y - 10 };
+            } else if (meta.type === 'line') {
+              ctx.textAlign = 'center';
+              position = { x: element.x, y: element.y - 12 };
+            } else if (meta.type === 'doughnut' || meta.type === 'pie') {
+              const midAngle = (element.startAngle + element.endAngle) / 2;
+              const offset = element.outerRadius + 14;
+              position = {
+                x: element.x + Math.cos(midAngle) * offset,
+                y: element.y + Math.sin(midAngle) * offset,
+              };
+              ctx.textAlign = midAngle > Math.PI / 2 && midAngle < (3 * Math.PI) / 2 ? 'right' : 'left';
+            }
+
+            ctx.fillText(label, position.x, position.y);
+            ctx.restore();
+          });
+        });
+      }
+    };
+
+    // Get data passed from Flask backend
+    var categories = {{ categories|default ([]) | tojson | safe
+  }};
+  var amounts = {{ amounts|default ([]) | tojson | safe }};
+  var barLabels = {{ bar_labels|default ([]) | tojson | safe }};
+  var barAmounts = {{ bar_amounts|default ([]) | tojson | safe }};
+  var timeLabels = {{ time_labels|default ([]) | tojson | safe }};
+  var timeAmounts = {{ time_amounts|default ([]) | tojson | safe }};
+
+
+  // Define color scheme for each category
+  var categoryColors = {
+    'Food': '#f97316',
+    'Transport': '#3b82f6',
+    'Shopping': '#8b5cf6',
+    'Utilities': '#ef4444',
+    'Entertainment': '#ec4899',
+    'Education': '#10b981',
+    'Healthcare': '#06b6d4',
+    'Other': '#6b7280'
+  };
+
+  // ========================================
+  // CHART 1: DOUGHNUT CHART
+  // Shows percentage breakdown by category
+  // ========================================
+  if (categories && categories.length && amounts && amounts.length) {
+
+    // Map each category to its color
+    var donutBg = categories.map(function (c) {
+      return categoryColors[c] || '#6b7280';
+    });
+
+    // White borders between slices
+    var donutBorder = donutBg.map(function () {
+      return '#ffffff';
+    });
+
+    // Calculate total for percentage calculation
+    var total = amounts.reduce(function (a, b) {
+      return a + b;
+    }, 0);
+
+    new Chart(document.getElementById('expensesDonut').getContext('2d'), {
+      type: 'doughnut',
+      data: {
+        labels: categories,
+        datasets: [{
+          data: amounts,
+          backgroundColor: donutBg,
+          borderColor: donutBorder,
+          borderWidth: 2,
+          hoverOffset: 6  // How much slice moves out on hover
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: {
+            display: true,
+            text: '',
+            color: '#374151',
+            font: { size: 18 }
+          },
+          legend: {
+            display: true,
+            position: 'right',
+            labels: { usePointStyle: true, boxWidth: 12 }
+          },
+          tooltip: {
+            callbacks: {
+
+              label: function (ctx) {
+                var value = ctx.parsed;
+                var percent = total ? ((value / total) * 100).toFixed(2) : 0;
+                return ctx.label + ': NPR ' + Number(value).toFixed(2) + ' (' + percent + '%)';
+              }
+            }
+          }
+        },
+        cutout: '40%'  // Size of center hole
+      },
+      plugins: [showDataLabelsPlugin]
+    });
+  } else {
+    // Show empty state if no data
+    document.getElementById('expensesDonut').style.display = 'none';
+    document.getElementById('donut-empty').style.display = 'block';
+  }
+
+  // ========================================
+  // CHART 2: BAR CHART
+  // Shows total spending per month
+  // ========================================
+  if (barLabels && barLabels.length && barAmounts && barAmounts.length) {
+
+    new Chart(document.getElementById('expensesBar').getContext('2d'), {
+      type: 'bar',
+      data: {
+        labels: barLabels,
+        datasets: [{
+          label: 'Amount (NPR)',
+          data: barAmounts,
+          backgroundColor: '#3b82f6',
+          borderColor: '#ffffff',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          title: {
+            display: true,
+            text: '',
+            color: '#374151',
+            font: { size: 18 }
+          },
+          tooltip: {
+            callbacks: {
+              label: function (ctx) {
+                return 'NPR ' + Number(ctx.parsed.y).toFixed(2);
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { autoSkip: false },
+            grid: { display: false }
+          },
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Amount (NPR)' }
+          }
+        }
+      },
+      plugins: [showDataLabelsPlugin]
+    });
+  } else {
+    // Show empty state if no data
+    document.getElementById('expensesBar').style.display = 'none';
+    document.getElementById('bar-empty').style.display = 'block';
+  }
+
+  // ========================================
+  // CHART 3: LINE CHART
+  // Shows expenses over time (timeline)
+  // ========================================
+  if (timeLabels && timeLabels.length && timeAmounts && timeAmounts.length) {
+
+    new Chart(document.getElementById('expensesLine').getContext('2d'), {
+      type: 'line',
+      data: {
+        labels: timeLabels,
+        datasets: [{
+          label: 'Daily Total (NPR)',
+          data: timeAmounts,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.15)',
+          tension: 0.25,    // Line curve smoothness 
+          fill: true,       // Fill area under line
+          pointRadius: 3
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          title: {
+            display: true,
+            text: 'Expenses Over Time',
+            color: '#374151',
+            font: { size: 18 }
+          },
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function (ctx) {
+                return 'NPR ' + Number(ctx.parsed.y).toFixed(2);
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            title: { display: true, text: 'Date' }
+          },
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Amount (NPR)' }
+          }
+        }
+      },
+      plugins: [showDataLabelsPlugin]
+    });
+  } else {
+    // Show empty state if no data
+    document.getElementById('expensesLine').style.display = 'none';
+    document.getElementById('line-empty').style.display = 'block';
+  }
+  });
+</script>
+
+{% endblock %}

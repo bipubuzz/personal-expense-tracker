@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Macondo&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap");
 
 /* ============================================
    GLOBAL STYLES
@@ -58,28 +58,19 @@ html {
 
 #sidebar ul li a,
 .logo,
-.add-expense-btn,
-.profile-section {
+.add-expense-btn{
   white-space: nowrap;
   overflow: hidden;
   transition: padding 0.3s, opacity 0.3s;
 }
 
-#sidebar ul,
-.profile-section {
+#sidebar ul{
   margin: 0;
   padding: 20px;
   list-style: none;
 }
 
-.profile-section {
-  padding-left: 30px;
-}
 
-.profile-section svg {
-  width: 30px;
-  height: 30px;
-}
 
 #sidebar ul li {
   border-radius: 9px;
@@ -115,11 +106,21 @@ html {
   }
 }
 
+/* Profile positioned at bottom of sidebar */
+#profile {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: 20px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 5px;
+  padding-left: 0px;
+}
 /* Hide text when sidebar is collapsed */
 #sidebar:not(:hover) ul li a span,
 #sidebar:not(:hover) .logo span,
-#sidebar:not(:hover) .add-expense-btn span,
-#sidebar:not(:hover) .profile-details {
+#sidebar:not(:hover) .add-expense-btn span{
   opacity: 0;
   width: 0;
   padding: 0;
@@ -129,8 +130,8 @@ html {
 /* Show text when sidebar is expanded */
 #sidebar:hover ul li a span,
 #sidebar:hover .logo span,
-#sidebar:hover .add-expense-btn span,
-#sidebar:hover .profile-details {
+#sidebar:hover .add-expense-btn span
+{
   opacity: 1;
   width: auto;
   padding-left: 1em;
@@ -907,9 +908,4 @@ body:has(#popup.show) #sidebar {
   padding: 2rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin-bottom: 2rem;
-}
-
-#pie-chart {
-  width: 100%;
-  height: 500px;
 }

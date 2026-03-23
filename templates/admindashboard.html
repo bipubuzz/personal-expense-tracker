@@ -1,0 +1,233 @@
+{% extends "adminlayout.html" %}
+{% block content %}
+
+<style>
+    .admin-header {
+        background: #7374d1ac;
+        color: white;
+        padding: 24px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+    }
+
+    .admin-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 16px;
+        margin-bottom: 32px;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card h3 {
+        color: #6b7280;
+        font-size: 14px;
+        margin-bottom: 8px;
+    }
+
+    .stat-card .value {
+        font-size: 32px;
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    .data-table {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 32px;
+        overflow-x: auto;
+    }
+
+    .data-table h2 {
+        margin-bottom: 16px;
+        color: #1f2937;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th,
+    td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    th {
+        background: #f9fafb;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    tr:hover {
+        background: #f9fafb;
+    }
+
+    .logout-btn {
+        background: #ef4444;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-block;
+        border: none;
+        cursor: pointer;
+    }
+
+    .logout-btn:hover {
+        background: #dc2626;
+    }
+
+
+    .recent-expense {
+        color: #000000;
+        font-size: 16px;
+    }
+
+    .no-expense {
+        color: #ef4444;
+        font-style: italic;
+    }
+
+    .inactive-row {
+        background: #fef2f2 !important;
+    }
+
+    .inactive-row:hover {
+        background: #fee2e2 !important;
+    }
+
+    .delete-user-btn {
+        background: #ef4444;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .delete-user-btn:hover {
+        background: #dc2626;
+        transform: scale(1.05);
+    }
+</style>
+
+<script>
+    // Confirmation for deleting individual user
+    function confirmDeleteUser(username) {
+        return confirm('Delete user "' + username + '"?\n\nThis will permanently delete:\n• User account\n• All their expenses\n\nThis action cannot be undone!');
+    }
+</script>
+
+<!-- Admin Header -->
+<div class="admin-header">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+        <div>
+            <h1 style="margin: 0; font-size: 28px;">Admin Dashboard</h1>
+            <p style="margin: 8px 0 0 0; opacity: 0.9;">Welcome, Admin</p>
+        </div>
+        <a href="{{ url_for('admin_logout') }}" class="logout-btn">Logout</a>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="admin-stats">
+    <div class="stat-card">
+        <h3>Total Users</h3>
+        <div class="value">{{ total_users }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>Total Expenses</h3>
+        <div class="value">{{ total_expenses_count }}</div>
+    </div>
+</div>
+
+<!-- Users Table -->
+<div class="data-table" id="users">
+    <h2>All Users</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Recent Expense</th>
+                <th style="text-align: center;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr {% if user.is_inactive %} class="inactive-row" {% endif %}>
+                <td>{{ user.username }}</td>
+                <td>{{ user.email }}</td>
+                <td>
+                    {% if user.recent_expense %}
+                    <span class="recent-expense">{{ user.recent_expense }}</span>
+                    {% else %}
+                    <span class="no-expense">No expenses</span>
+                    {% endif %}
+                </td>
+                <td style="text-align: center;">
+                    {% if user.is_inactive %}
+                    <form method="POST" action="{{ url_for('delete_user', user_email=user.email) }}"
+                        style="display: inline-block; margin: 0;"
+                        onsubmit="return confirmDeleteUser('{{ user.username }}');">
+                        <button type="submit" class="delete-user-btn">🗑️ Delete</button>
+                    </form>
+                    {% else %}
+                    <span style="color: #10b981; font-size: 12px;">✓ Active</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if users|length == 0 %}
+    <p style="text-align: center; color: #6b7280; padding: 20px;">No users found.</p>
+    {% endif %}
+</div>
+
+<!-- Expenses Table -->
+<div class="data-table" id="expenses">
+    <h2>All Expenses (Recent First)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>User Email</th>
+                <th>Username</th>
+                <th>Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for expense in expenses[:100] %}
+            <tr>
+                <td>{{ expense.user_email }}</td>
+                <td>{{ expense.username }}</td>
+                <td>{{ expense.date }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% if expenses|length > 100 %}
+    <p style="margin-top: 16px; color: #6b7280; text-align: center;">
+        Showing 100 of {{ expenses|length }} expenses
+    </p>
+    {% endif %}
+    {% if expenses|length == 0 %}
+    <p style="text-align: center; color: #6b7280; padding: 20px;">No expenses found.</p>
+    {% endif %}
+</div>
+
+{% endblock %}
